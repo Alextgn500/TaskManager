@@ -1,0 +1,57 @@
+services:
+  db:  
+    image: postgres:15
+    container_name: taskmanager_postgres
+    environment:
+      POSTGRES_DB: "my_db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "000"
+    volumes:  
+      - taskmanager_api_dbdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d my_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: taskmanager_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:  
+        condition: service_healthy
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: ./front_tm
+      dockerfile: Dockerfile
+    container_name: taskmanager_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+
+volumes:
+  taskmanager_api_dbdata:
+
+networks:
+  taskmanager-network:
+    driver: bridge
