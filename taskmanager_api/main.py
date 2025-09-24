@@ -1,14 +1,32 @@
 from contextlib import asynccontextmanager
 import asyncio
 from fastapi import FastAPI
+from app.backend.base import Base
 from app.auth.auth_user import auth_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.task_r import router_task
 from app.routers.user_r import router_user
 from app.backend.db_depends import get_async_db
+from app.backend.db import async_create_tables, check_registered_models
+from app.backend.seed_data import create_test_data
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 import os
+
+
+async def create_tables():
+    """Функция для создания таблиц в БД"""
+    print("📊 Создание таблиц...")
+    
+    if not check_registered_models():
+        print("❌ Модели не зарегистрированы!")
+        return
+    
+    await async_create_tables()
+    print("✅ Таблицы созданы успешно!")
+    
+    # Создаем тестовые данные
+    await create_test_data()
 
 
 @asynccontextmanager

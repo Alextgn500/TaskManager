@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Register.css";
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("/users/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,57 +1,56 @@
-services:
-  db:  
-    image: postgres:15
-    container_name: taskmanager_postgres
-    environment:
-      POSTGRES_DB: "my_db"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "000"
-    volumes:  
-      - taskmanager_api_dbdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - taskmanager-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d my_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+version: '3.8'
 
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: taskmanager_db
+    environment:
+       POSTGRES_DB: ${POSTGRES_DB}
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - taskmanager_network
+
+  # Backend FastAPI
   backend:
     build:
-      context: ./backend
+      context: ./taskmanager_api  
       dockerfile: Dockerfile
     container_name: taskmanager_backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     ports:
       - "8000:8000"
     depends_on:
-      db:  
-        condition: service_healthy
+      - db
     networks:
-      - taskmanager-network
-    restart: unless-stopped
-    env_file:
-      - .env
+      - taskmanager_network
+    volumes:
+      - ./taskmanager_api:/app  
 
+  # Frontend React
   frontend:
     build:
       context: ./front_tm
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # ← исправлено
     container_name: taskmanager_frontend
     ports:
-      - "3000:80"
+      - "3000:80"  # ← или :80 для production
     depends_on:
       - backend
     networks:
-      - taskmanager-network
-    restart: unless-stopped
+      - taskmanager_network
+    environment:
+      - REACT_APP_API_URL=http://localhost:${BACKEND_PORT}
 
 volumes:
-  taskmanager_api_dbdata:
+  postgres_data:
 
 networks:
-  taskmanager-network:
+  taskmanager_network:
     driver: bridge

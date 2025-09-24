@@ -6,7 +6,7 @@ from app.models.user_m import Users
 from app.models.task_m import Tasks
 
 # Асинхронное подключение к базе данных
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:000@postgres:5432/my_db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:000@taskmanager_db:5432/my_db")
 async_engine = create_async_engine(DATABASE_URL)
 
 # Создаем фабрику асинхронных сессий с использованием async_sessionmaker
@@ -44,4 +44,3 @@ if __name__ == "__main__":
     import asyncio
 
     asyncio.run(async_create_tables())
-
